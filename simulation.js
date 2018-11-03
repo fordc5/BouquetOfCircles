@@ -85,7 +85,7 @@ var textClearY     = canvas.height * (9.5/10) + 8;
 // To be displayed in the top bar
 var hasMessage         = false;
 var message            = "";
-var fontMessage        = "16px Helvetica";
+var fontMessage        = "15px Helvetica";
 var fontMessageColor   = "rgba(200,0,0,0.9)";
 var textMessageX       = (canvas.width/2) - (130);
 var textMessageY       = canvas.height * (0.9/10);
@@ -94,7 +94,7 @@ var messageDisplayTime = 1500 // (milliseconds)
 // Animating
 var animating         = false;
 var step              = 0; // counter for which step of algorithm we are on
-var animationTime     = 4000; // (milliseconds) duration for each step
+var animationTime     = 2000; // (milliseconds) duration for each step
 var finishedAnimating = false;
 
 //building
@@ -113,6 +113,14 @@ var leafVertices = [];
 // array of edges that aren't on circle for cornucopia lemma n = 1.
 var circleStems = [];
 
+// keep track of edges on circles
+var edgesOnCircles = [];
+
+//points for later triples
+var triples = [];
+
+
+var quadselect = [];
 
 
 //******************************************\\
@@ -173,6 +181,9 @@ function mouseDownHandler(e) {
         leafEdges = [];
         leafVertices = [];
         circleStems = [];
+        edgesOnCircles = [];
+        triples = [];
+        quadselect = [];
         // reset headers
         numVertices = 0;
 		numEdges = 0;
@@ -356,7 +367,7 @@ function headerData() {
 
     ctx.font = fontVertices;
     ctx.fillStyle = fontVerticesColor;
-    ctx.fillText(textVertices + numVertices, textVerticesX, textVerticesY);
+    ctx.fillText(textVertices + Object.keys(G.vertices).length, textVerticesX, textVerticesY);
 
     // Connected label
     ctx.font = fontConnected;
@@ -425,6 +436,7 @@ function displayMessage() {
 }
 
 function drawTriangles() {
+    console.log(triangles);
     for (var triangleIndex in triangles) {
 
         first = triangles[triangleIndex][0];
@@ -447,30 +459,33 @@ function drawTriangles() {
 // spanning tree found using BFS search
 // also checks if the graph is connected.
 function bfsSpanning() {
+
+    
     var numVerts = Object.keys(G.vertices).length;
     if (numVerts > 0) {
         var visited = [];
-        for (x = 0; x < numVerts; x++) {
-            visited.push(false);
-        }
+        // for (x = 0; x < numVerts; x++) {
+        //     visited.push(false);
+        // }
         var queue = [];
-        queue.push('1');
-        visited[parseInt('1') - 1] = true;
+        queue.push(Object.keys(G.vertices)[0]);
+        // visited[parseInt(Object.keys(G.vertices)[0]) - 1] = true;
+        visited.push(Object.keys(G.vertices)[0]);
         S = [];
         while (queue.length != 0) {
             s = queue.pop(0);
             for (var edge in G.edges) {
                 var edgeArr = G.edges[edge].split(",");
                 if (edgeArr[0] == s) {
-                    if (visited[parseInt(edgeArr[1]) - 1] == false) {
+                    if (visited.indexOf(edgeArr[1]) == -1) {
                         queue.push(edgeArr[1]);
-                        visited[parseInt(edgeArr[1]) - 1] = true;
+                        visited.push(edgeArr[1]);
                         S.push(G.edges[edge]);
                     }
                 } else if (edgeArr[1] == s) {
-                    if (visited[parseInt(edgeArr[0]) - 1] == false) {
+                    if (visited.indexOf(edgeArr[0]) == -1) {
                         queue.push(edgeArr[0]);
-                        visited[parseInt(edgeArr[0]) - 1] = true;
+                        visited.push(edgeArr[0]);
                         S.push(G.edges[edge]);
                     }
                 }
@@ -487,12 +502,11 @@ function bfsSpanning() {
 // helper method for determining if graph connected
 // method actually just checks if every element in bool[] is true
 function checkConnected(arr) {
-    for (var edgeIndex in arr) {
-        if (arr[edgeIndex] == false) {
-            return false;
-        }
+    if (arr.length == Object.keys(G.vertices).length) {
+        return true;
+    } else {
+        return false;
     }
-    return true;
 }
 
 
@@ -500,6 +514,7 @@ function checkConnected(arr) {
 // ******** Animate ******** \\
 
 function animate() {
+
 
     // STEP 1: Show the message for spanning tree
 	if (step == 1) {
@@ -518,6 +533,8 @@ function animate() {
         
         // Must create a temporary G because we will be adding edges and vertices
         tempG = JSON.parse(JSON.stringify(G));
+
+        //quads = [];
 
 		// Update graph with new edges and vertices
 		for (var edgeIndex in tempG.edges) {
@@ -600,7 +617,7 @@ function animate() {
 	else if (step == 3) {
 
         hasMessage = true;
-        message = "Step 3: Apply Cornucopia Lemma for 2-simplices (1)";
+        message = "Step 3: Apply Cornucopia Lemma for 2-simplices (1.1)";
 
         for (var quadIndex in quads) {
             startElement = quads[quadIndex][0];
@@ -612,7 +629,7 @@ function animate() {
             otherElementLoc = G.vertices[otherElement];
 
             triVertexArr = [startElementLoc, secondElementLoc, otherElementLoc];
-
+            console.log(triVertexArr);
             triangles.push(triVertexArr);
 
         }
@@ -625,7 +642,7 @@ function animate() {
     else if (step == 4) {
 
         hasMessage = true;
-        message = "Step 4: Apply Cornucopia Lemma for 2-simplices (1)";
+        message = "Step 4: Apply Cornucopia Lemma for 2-simplices (1.2)";
         
         triangles = [];
         
@@ -658,7 +675,7 @@ function animate() {
     else if (step == 5) {
 
         hasMessage = true;
-        message = "Step 5: Apply Cornucopia Lemma for 2-simplices (2)";
+        message = "Step 5: Apply Cornucopia Lemma for 2-simplices (2.1)";
         
 
         for (var quadIndex in quads) {
@@ -682,7 +699,7 @@ function animate() {
     else if (step == 6) {
 
         hasMessage = true;
-        message = "Step 6: Apply Cornucopia Lemma for 2-simplices (2)";
+        message = "Step 6: Apply Cornucopia Lemma for 2-simplices (2.2)";
         
         triangles = [];
 
@@ -705,20 +722,89 @@ function animate() {
             tempEdge = vertexArray.join(",");
             G.edges.push(tempEdge);
             numEdges++;
+
+
+            var vertexArray = [parseInt(quads[quadIndex][3]), parseInt(other)];
+            vertexArray.sort(sortFunc);
+            tempEdge = vertexArray.join(",");
+            if (!contains(G.edges, tempEdge)) {
+                quadselect.push(quadIndex);
+            }
         }
 
         
-
-        // Increment step counter
-        step++;
+        if (quadselect.length > 0) {
+            // Increment step counter
+            step++;
+        } else {
+            step = step + 3;
+        }
+        
     }
 
     else if (step == 7) {
 
         hasMessage = true;
+        message = "Step 6: continued";
+        
+        for (var quadIndex in quadselect) {
+            startElement = quads[quadselect[quadIndex]][2];
+            secondElement = quads[quadselect[quadIndex]][3];
+            otherElement = quads[quadselect[quadIndex]][4];
+            
+            startElementLoc = G.vertices[startElement];
+            secondElementLoc = G.vertices[secondElement];
+            otherElementLoc = G.vertices[otherElement];
+
+            triVertexArr = [startElementLoc, secondElementLoc, otherElementLoc];
+
+            triangles.push(triVertexArr);
+        }
+
+        // Increment step counter
+        step++;
+    }
+
+    else if (step == 8) {
+
+        hasMessage = true;
+        message = "Step 6: continued";
+        
+        triangles = [];
+
+        for (quadIndex in quadselect) {
+            start = quads[quadselect[quadIndex]][2];
+            first = quads[quadselect[quadIndex]][3];
+            other = quads[quadselect[quadIndex]][4];
+
+            // remove edge start-other from G
+            var vertexArray = [parseInt(start), parseInt(other)];
+            vertexArray.sort(sortFunc);
+            tempEdge = vertexArray.join(",");
+            var eIndex = G.edges.indexOf(tempEdge);
+            G.edges.splice(eIndex, 1);
+            numEdges--;
+
+            // add new edge
+            var vertexArray = [parseInt(first), parseInt(other)];
+            vertexArray.sort(sortFunc);
+            tempEdge = vertexArray.join(",");
+            G.edges.push(tempEdge);
+            numEdges++;
+
+        }
+
+        // Increment step counter
+        step++;
+    }
+
+    else if (step == 9) {
+
+        hasMessage = true;
         message = "Step 7: Find edges with a 'leaf' as an endpoint";
 
         keysArr = Object.keys(G.vertices);
+        numLeafEdges = 0;
         for (vertexIndex in keysArr) {
             count = 0;
             recentEdge = '';
@@ -732,17 +818,25 @@ function animate() {
             if (count < 2) {
                 leafEdges.push(recentEdge);
                 leafVertices.push(keysArr[vertexIndex]);
+                numLeafEdges++;
             }
         }
 
-        // Increment step counter
-        step++;
+        // if more exist go back to step 7
+        if (numLeafEdges > 0) {
+            step++;
+        } else {
+            // Increment step counter
+            step = step + 2;
+        }
+        // // Increment step counter
+        // step++;
     }
 
-    else if (step == 8) {
+    else if (step == 10) {
 
         hasMessage = true;
-        message = "Step 8: Remove leaf edges";
+        message = "Step 8: Apply Cornucopia Lemma for 1-simplices";
 
         // remove edges
         for (edgeIndex in leafEdges) {
@@ -754,7 +848,7 @@ function animate() {
         // remove vertices
         for (vertexIndex in leafVertices) {
             delete G.vertices[leafVertices[vertexIndex]];
-            numVertices--;
+            //numVertices--;
         }
 
         leafEdges = [];
@@ -786,67 +880,193 @@ function animate() {
         }
     }
 
-    else if (step == 9) {
+    else if (step == 11) {
 
         hasMessage = true;
         message = "Step 9: Identity circle stems";
         S = [];
 
+        circleStems = [];
+
         edgesOnCircles = [];
+
+        isEveryTriangle = true;
 
         for (var quadIndex in quads) {
             startElement = quads[quadIndex][2];
             secondElement = quads[quadIndex][3];
             otherElement = quads[quadIndex][4];
 
-            var vertexArray = [parseInt(startElement), parseInt(secondElement)];
-            vertexArray.sort(sortFunc);
-            tempEdge = vertexArray.join(",");
-            edgesOnCircles.push(tempEdge);
 
             var vertexArray = [parseInt(otherElement), parseInt(secondElement)];
             vertexArray.sort(sortFunc);
             tempEdge = vertexArray.join(",");
             edgesOnCircles.push(tempEdge);
+ 
 
-            var vertexArray = [parseInt(startElement), parseInt(otherElement)];
-            vertexArray.sort(sortFunc);
-            tempEdge = vertexArray.join(",");
-            edgesOnCircles.push(tempEdge);
+            //get neighbors of 3:
+            threeNeighbors = []
+            for (edgeIndex in G.edges) {
+                from = G.edges[edgeIndex].split(',')[0];
+                to = G.edges[edgeIndex].split(',')[1];
+                if (secondElement == from && to !== otherElement) {
+                    threeNeighbors.push(to);
+                } else if (secondElement == to && to !== otherElement) {
+                    threeNeighbors.push(from);
+                }
+            }
+
+            //get neighbors of 4:
+            fourNeighbors = []
+            for (edgeIndex in G.edges) {
+                from = G.edges[edgeIndex].split(',')[0];
+                to = G.edges[edgeIndex].split(',')[1];
+                if (otherElement == from && to !== secondElement) {
+                    fourNeighbors.push(to);
+                } else if (otherElement == to && to !== secondElement) {
+                    fourNeighbors.push(from);
+                }
+            }
+
+            //find intersection of two arrays
+            fourNeighbors.filter(value => -1 !== threeNeighbors.indexOf(value));
+
+            if (fourNeighbors.length == 0) {
+                isEveryTriangle = false;
+            } else {
+                commonNeighbor = fourNeighbors[0];
+
+                var vertexArray = [parseInt(commonNeighbor), parseInt(secondElement)];
+                vertexArray.sort(sortFunc);
+                tempEdge = vertexArray.join(",");
+                edgesOnCircles.push(tempEdge);
+
+                var vertexArray = [parseInt(commonNeighbor), parseInt(otherElement)];
+                vertexArray.sort(sortFunc);
+                tempEdge = vertexArray.join(",");
+                edgesOnCircles.push(tempEdge);
+            }
+            
+
         }
 
-        for (edgeIndex in G.edges) {
-            if (!contains(edgesOnCircles, G.edges[edgeIndex])) {
-                for (eIndex in edgesOnCircles) {
-                    if (G.edges[edgeIndex].split(',')[0] == edgesOnCircles[eIndex].split(',')[0] || 
-                        G.edges[edgeIndex].split(',')[0] == edgesOnCircles[eIndex].split(',')[1] ||
-                        G.edges[edgeIndex].split(',')[1] == edgesOnCircles[eIndex].split(',')[0] ||
-                        G.edges[edgeIndex].split(',')[1] == edgesOnCircles[eIndex].split(',')[1]) {
-                        
-                        circleStems.push(G.edges[edgeIndex]);
+        if (isEveryTriangle) {
+
+        
+
+            for (edgeIndex in G.edges) {
+                if (!contains(edgesOnCircles, G.edges[edgeIndex])) {
+                    for (eIndex in edgesOnCircles) {
+                        if (G.edges[edgeIndex].split(',')[0] == edgesOnCircles[eIndex].split(',')[0] || 
+                            G.edges[edgeIndex].split(',')[0] == edgesOnCircles[eIndex].split(',')[1] ||
+                            G.edges[edgeIndex].split(',')[1] == edgesOnCircles[eIndex].split(',')[0] ||
+                            G.edges[edgeIndex].split(',')[1] == edgesOnCircles[eIndex].split(',')[1]) {
+                            
+                            circleStems.push(G.edges[edgeIndex]);
+                        }
                     }
                 }
-                
             }
+            if (circleStems.length !== 0) {
+                // Increment step counter
+                step++;
+            } else {
+                //jump to the end
+                step = step + 3;
+            }
+        } else {
+            bfsSpanning();
+            step = 1;
         }
-
-        // Increment step counter
-        step++;
     }
 
-    else if (step == 10) {
+    else if (step == 12) {
 
         hasMessage = true;
-        message = "Apply Cornucopia Lemma for 1-simplices";
+        message = "Step 10.1: Apply Cornucopia Lemma on stems";
 
-        
-        
 
+        for (edgeIndex in circleStems) {
+            // find edge on circle adjacent
+            pointOne = '';
+            pointTwo = '';
+            pointThree = '';
+
+            for (eIndex in edgesOnCircles) {
+                if (circleStems[edgeIndex].split(',')[0] == edgesOnCircles[eIndex].split(',')[0]) {
+                    pointThree = edgesOnCircles[eIndex].split(',')[1];
+                    pointOne = circleStems[edgeIndex].split(',')[1];
+                    pointTwo = circleStems[edgeIndex].split(',')[0];
+                } else if (circleStems[edgeIndex].split(',')[0] == edgesOnCircles[eIndex].split(',')[1]) {
+                    pointThree = edgesOnCircles[eIndex].split(',')[0];
+                    pointOne = circleStems[edgeIndex].split(',')[1];
+                    pointTwo = circleStems[edgeIndex].split(',')[0];
+                } else if (circleStems[edgeIndex].split(',')[1] == edgesOnCircles[eIndex].split(',')[0]) {
+                    pointThree = edgesOnCircles[eIndex].split(',')[1];
+                    pointOne = circleStems[edgeIndex].split(',')[0];
+                    pointTwo = circleStems[edgeIndex].split(',')[1];
+                } else if (circleStems[edgeIndex].split(',')[1] == edgesOnCircles[eIndex].split(',')[1]) {
+                    pointThree = edgesOnCircles[eIndex].split(',')[0];
+                    pointOne = circleStems[edgeIndex].split(',')[0];
+                    pointTwo = circleStems[edgeIndex].split(',')[1];
+                }
+            }
+            // save vertices
+            triples.push([pointOne, pointTwo, pointThree]);
+
+            // get locations for drawing triangle
+            startElementLoc = G.vertices[pointOne];
+            secondElementLoc = G.vertices[pointTwo];
+            otherElementLoc = G.vertices[pointThree];
+
+            triVertexArr = [startElementLoc, secondElementLoc, otherElementLoc];
+
+            triangles.push(triVertexArr);
+                    
+                
+        }
+        
         // Increment step counter
         step++;
     }
+
+    else if (step == 13) {
+
+        hasMessage = true;
+        message = "Step 10.2: Apply Cornucopia Lemma on stems";
+
+        triangles = [];
+
+        for (tripleIndex in triples) {
+            start = triples[tripleIndex][0];
+            first = triples[tripleIndex][1];
+            other = triples[tripleIndex][2];
+
+            // remove edge start-other from G
+            var vertexArray = [parseInt(first), parseInt(other)];
+            vertexArray.sort(sortFunc);
+            tempEdge = vertexArray.join(",");
+            var eIndex = G.edges.indexOf(tempEdge);
+            G.edges.splice(eIndex, 1);
+            numEdges--;
+
+            // add new edge
+            var vertexArray = [parseInt(start), parseInt(other)];
+            vertexArray.sort(sortFunc);
+            tempEdge = vertexArray.join(",");
+            G.edges.push(tempEdge);
+            numEdges++;
+        }
+        
+
+        // recurse
+        bfsSpanning();
+        circleStems = [];
+        step = 1;
+        
+    }
     
-    else if (step == 11) {
+    else if (step == 14) {
         animating = false;
         finishedAnimating = true;
     }
